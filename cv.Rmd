@@ -339,5 +339,5 @@ world %>% filter(`region` != "Antarctica") %>%     # Focus on the other parts
 
 This curriculum vitae was generated in RMarkdown using Mitchell O'Hara-Wild's library "Vitae" *(https://pkg.mitchelloharawild.com/vitae/)* and a couple LaTeX statements here and there to help with pagination.  Bryan Jenks has a great video showing how to get started with Mitchell's library  *(https://www.youtube.com/watch?v=cMlRAiQUdD8)*.  I pulled in the custom LaTeX class file from Lorena Abad's GitHub *(https://github.com/loreabad6/R-CV)*.
 
-My 'Twenty Second' brief resume is available in my GitHub repo  https://github.com/KC3DRU/CV/Resume20Seconds.pdf . 
+My 'Twenty Second' brief resume is available in my GitHub repo  https://github.com/KC3DRU/CV/blob/main/Resume20Seconds.pdf . 
 
