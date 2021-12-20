@@ -1,0 +1,213 @@
+---
+name: Rick
+surname: Stoner
+position: "Data Scientist"
+address: "Dillsburg, Pennsylvania"
+profilepic: "./images/frozen_motion_small.jpg"
+# www: "RainBark.com"
+email: "RLStoner@Gmail.com"
+# gitlab: KC3DRU
+github: KC3DRU
+linkedin: rick-stoner-39b1821
+# orcid: 0000-0002-9604-3069
+date: "`r format(Sys.time(), '%B %Y')`"
+headcolor:  012EED  
+# skills:
+#     - "Skill/3.2"
+#     - "Skill/5.0"
+# skillstext: "abc def"
+aboutme: "Software developer working in the data science field focusing on <br/> data acquisition and preparation, process automation, and data visualization."
+# docname: CV
+output: 
+  vitae::twentyseconds:
+  keep_tex: true
+papersize: letter
+---
+
+
+```{r setup, include=FALSE}
+# install.packages("tinytex")
+# tinytex::install_tinytex()
+# install.packages("rsvg")
+
+library(dplyr)                    # Data wrangling
+library(emojifont)
+library(fontawesome)
+library(hrbrthemes)               # Better looking chart themes
+library(ggplot2)                  # Plots on skills and mapping
+library(kableExtra)
+library(rmarkdown)
+library(readODS)                  # Source data now comes from Libre Office worksheets
+library(stringr)                  # String manipulation
+library(tidyverse)
+library(vitae) 
+
+# install.packages("devtools")
+# library(devtools)
+
+# remove.packages("vitae")
+# install_github("KC3DRU/vitae")
+
+
+knitr::opts_chunk$set(echo = FALSE,
+                      warning = FALSE,
+                      message = FALSE)
+
+x <- rmarkdown::metadata$skills
+y <- rmarkdown::metadata$skillstext
+
+print(paste("x=", x, "  y=", y))
+```
+
+
+# Employment  
+
+```{r EMPLOYMENT}
+
+# Pull in the theme color from the YAML parms and use it in plots and 
+# tables so that we have a consistent color theme.
+
+myColor <- paste0('#',rmarkdown::metadata$headcolor)
+
+
+work <- readODS::read_ods(path = './data/JobHistory.ods',
+                         sheet = 1)
+
+work$ShortStart <- lapply(work$start_date, function(x){str_split(x, pattern = '-')[[1]][1]} )
+work$ShortEnd <- lapply(work$end_date, function(x){str_split(x, pattern = '-')[[1]][1]} )
+
+work %>%
+  # filter(Resume == 'Yes') %>%
+  select(role, company, ShortStart, ShortEnd) %>%
+  unique()%>%
+  mutate(sep1 = '  ',
+         sep2 = ' -- ') %>%
+  brief_entries(
+    with = role,
+    what = company,
+    # why = ,
+    when = glue::glue("{ShortStart} - {ShortEnd}",.na = ""),
+    sep1 = sep1,
+    sep2 = sep2
+    # where = where
+  )
+
+```
+
+# Skills
+
+```{r SKILLS}
+skills <- read_ods(path = './data/skills.ods',
+                   sheet = 1) %>%
+  filter(Resume == 'Yes')
+
+skillSummary <- data.frame(Topic=character(), myList=character())
+
+# Spin through the list of individual skills in each category.
+# Build each skill into a string with a semicolon separating each entry.
+  aList = ''
+  y = 0
+  yMax = length(skills)
+  for (s in skills$Topic) {
+    
+    y = y + 1
+    if (y == yMax) {                # Skip semi for last entry on list
+      newEntry = paste0(s)
+    } else {
+      newEntry = paste0(s, '; ')  
+    }
+    
+    aList <- paste0(aList, newEntry)
+  }
+  skillSummary[nrow(skillSummary) + 1 , ] = c('Skillz', aList)
+
+
+
+skillSummary %>%
+  brief_entries(
+    # with = Topic,
+    with = myList
+    # what = myList
+  )
+
+```
+
+# Honors and Achievements
+
+```{r AWARDS}
+honors <- read_ods(path = './data/awards.ods',
+                         sheet = 1)
+honors %>%
+  filter(Resume == 'Yes') %>%
+  mutate(sep1 = ' ',
+         sep2 = ' - ') %>%
+  brief_entries(
+    # why = details,
+    when = startDate,
+    what = Award,
+    with = details,
+    sep1 = sep1,
+    sep2 = sep2
+  )
+
+```
+
+#  Presentations
+
+```{r Presentations}
+
+projects <- read_ods(path = './data/presentations.ods',
+                     sheet = 1)
+
+projects %>%
+  filter(Resume == 'Yes') %>%
+  mutate(sep1 = '',
+         sep2 = ' - ') %>%
+  brief_entries(
+    what = Presentation,
+    with = Description,
+    # why = Why,
+    when = WhenStart,
+    sep1 = sep1,
+    sep2 = sep2
+  )
+
+```
+
+# Community Service
+
+```{r Service}
+
+service <- read_ods(path = './data/CommunityService.ods',
+                    sheet = 1)
+service %>%
+  filter(Resume == 'Yes') %>%
+  mutate(sep1 = ' ',
+         sep2 = ' -- ') %>%
+  brief_entries(
+    with = Charity,
+    what = Role,
+    # why = detail,
+    when = glue::glue("{startDate} - {endDate}",.na = ""),
+    sep1 = sep1,
+    sep2 = sep2
+  )
+
+```
+
+
+#  Education
+
+1981 - 1985 Bachelor of Science in Business Administration
+
+Millersville University of PA
+
+
+
+Curriculum Vitae
+============================
+
+My curriculum vitae is available at my GitHub repository https://github.com/KC3DRU/CV/CV.pdf 
+
+
+

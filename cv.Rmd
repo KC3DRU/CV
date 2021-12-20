@@ -1,0 +1,343 @@
+---
+name: Rick
+surname: Stoner
+position: "Data Scientist"
+address: "Dillsburg, Pennsylvania"
+profilepic: "./images/frozen_motion_small.jpg"
+# www: "RainBark.com"
+email: "RLStoner@Gmail.com"
+gitlab: KC3DRU
+github: KC3DRU
+linkedin: rick-stoner-39b1821
+# orcid: 0000-0002-9604-3069
+date: "`r format(Sys.time(), '%B %Y')`"
+headcolor:  012EED  
+aboutme: "Software developer working in the data science field focusing on <br/> data acquisition and preparation, process automation, and data visualization."
+# docname: CV
+output: 
+  vitae::awesomecv:
+  keep_tex: true
+
+---
+
+
+```{r setup, include=FALSE}
+# install.packages("tinytex")
+# tinytex::install_tinytex()
+# install.packages("rsvg")
+
+library(dplyr)                    # Data wrangling
+library(emojifont)
+library(fontawesome)
+library(hrbrthemes)               # Better looking chart themes
+library(ggplot2)                  # Plots on skills and mapping
+library(kableExtra)
+library(rmarkdown)
+library(readODS)                  # Source data now comes from Libre Office worksheets
+library(stringr)                  # String manipulation
+library(tidyverse)
+library(vitae) 
+
+knitr::opts_chunk$set(echo = FALSE,
+                      warning = FALSE,
+                      message = FALSE)
+
+```
+
+
+# \faIcon{briefcase} - Employment  
+
+```{r EMPLOYMENT}
+
+# Pull in the theme color from the YAML parms and use it in plots and 
+# tables so that we have a consistent color theme.
+
+myColor <- paste0('#',rmarkdown::metadata$headcolor)
+
+
+work <- readODS::read_ods(path = './data/JobHistory.ods',
+                         sheet = 1)
+ 
+work %>%
+  detailed_entries(
+    with = role,
+    what = company,
+    why = details,
+    when = glue::glue("{start_date} --> {end_date}",.na = ""),
+    where = where
+  )
+
+```
+
+# \faIcon{graduation-cap} - Education
+
+```{r EDUCATION}
+edu <- read.csv(file = './data/education.csv')
+
+edu %>%
+  detailed_entries(
+    with = uni,
+    what = degree,
+    why = details,
+    when = glue::glue("{startDate} --> {endDate}",.na = ""),
+    where = loc
+  )
+
+```
+
+# \faIcon{hat-wizard} - Skills
+
+```{r SKILLS}
+skills <- read_ods(path = './data/skills.ods',
+                   sheet = 1)
+
+skillSummary <- data.frame(Topic=character(), myList=character())
+
+
+Topic_Areas <- unique(skills$`Topic Area`)
+
+# Spin through the list of individual skills in each category.
+# Build each skill into a string with a semicolon separating each entry.
+for (x in 1:length(Topic_Areas)) {
+  area = Topic_Areas[x]
+  aList = ''
+  y = 0
+  yMax = length(skills$Topic[which(skills$`Topic Area` == area)])
+  for (s in skills$Topic[which(skills$`Topic Area` == area)]) {
+    
+    y = y + 1
+    if (y == yMax) {                # Skip semi for last entry on list
+      newEntry = paste0(s)
+    } else {
+      newEntry = paste0(s, '; ')  
+    }
+    
+    aList <- paste0(aList, newEntry)
+  }
+  skillSummary[nrow(skillSummary) + 1 , ] = c(area, aList)
+}
+
+
+skillSummary %>%
+  detailed_entries(
+    with = Topic,
+    what = myList
+  )
+
+```
+
+# \faIcon{medal} - Honors and Achievements
+
+```{r AWARDS}
+honors <- read_ods(path = './data/awards.ods',
+                         sheet = 1)
+honors %>%
+  detailed_entries(
+      with = Award,
+    what = details,
+    # why = details,
+    when = startDate,
+    where = From
+  )
+
+```
+
+\newpage
+
+# \faIcon{people-carry} - Community Service
+
+```{r Service}
+
+service <- read_ods(path = './data/CommunityService.ods',
+                    sheet = 1)
+service %>%
+  detailed_entries(
+    with = Charity,
+    what = Role,
+    # why = detail,
+    when = glue::glue("{startDate} --> {endDate}",.na = "")
+  )
+
+```
+
+# \faIcon{chalkboard-teacher} - Presentations
+
+```{r Presentations}
+
+projects <- read_ods(path = './data/presentations.ods',
+                     sheet = 1)
+
+projects %>%
+  detailed_entries(
+    with = Presentation,
+    what = Description,
+    # why = Why,
+    when = WhenStart,
+    where = Where
+  )
+
+```
+
+# \faIcon{cogs} - Personal Projects
+
+```{r PROJECTS, echo=FALSE, results='asis'}
+
+projects <- read_ods(path = './data/projects.ods',
+                     sheet = 1)
+
+# This section will create a Kable table with information about 
+# various geeky projects done at home.
+projects %>%
+  select('With', 'What') %>%
+  rename('Project' = 'With', 'Description' = 'What') %>%
+  kbl() %>%
+  kable_styling(full_width = FALSE,  position = "left") %>%
+  row_spec(0, color = myColor, bold = TRUE) %>%
+  column_spec(1, width = "10em", border_left = TRUE) %>%
+  column_spec(2, width = "30em", border_right = TRUE)
+
+```
+
+
+
+\newpage
+
+\faIcon{star-half-alt} - Technical Self-Assessments
+================
+
+Rating my skills in various technologies on a scale of 1 to 10.
+
+```{r,  fig.width = 8, fig.height = 5, fig.align = "center", out.width = "7.6in", out.height = "4.5in"}
+
+# Set up a function to generate two skill plots at a time.
+plotSkills <- function(Skill1, Skill2){
+  skills %>%
+    filter(str_detect(`Topic Area`, Skill1) |
+             str_detect(`Topic Area`, Skill2)) %>%
+    
+        dplyr::group_by(`Topic Area`) %>%
+  arrange((`Self-Assessment`), .by_group = TRUE) %>%
+  mutate(ShortTopic = str_replace(Topic, '\\(.*\\)', '')) %>%
+  mutate(ShortArea = str_replace(`Topic Area`, '\\(.*\\)', '')) %>%
+  mutate(xord = factor(ShortTopic, levels = ShortTopic)) %>%
+  
+  ggplot( aes(x = xord, y=`Self-Assessment`)) +
+  geom_segment(aes(x = xord, 
+                   xend = xord, 
+                   y = 0, 
+                   yend = `Self-Assessment`),
+               color="grey",
+               alpha = 0.5, 
+               size = 0.5) +
+  geom_point(size=3,
+             color = myColor, aes(alpha=0.5)) +
+    geom_text(aes(label = `Self-Assessment`, 
+                y = (`Self-Assessment` * 0.80)),
+            hjust = 1,
+            color = "black",
+            position = position_dodge(0.5)) +
+  scale_x_discrete() +
+  coord_flip() +
+    facet_wrap( ~ ShortArea, strip.position = "top", scales = "free_y", ncol = 2) +
+    theme_ipsum() +
+    theme(
+    panel.grid.minor.y = element_blank(),
+    panel.grid.major.y = element_blank(),
+    legend.position="none",
+    axis.text.y = element_text(size = 12),
+    axis.text.x = element_blank(),
+    title = element_text(size = 13, color = myColor)
+  ) +
+    ggtitle(label = "Technical Skills Self-Assessment") +
+  xlab("") +
+  ylab("")
+}
+
+# Generate two plots at a time.
+plotSkills('Program', 'Markup')
+plotSkills('Database', 'Interch')
+plotSkills('Text', 'Vers')
+plotSkills('Operat', 'Single')
+
+```
+
+
+\pagebreak
+
+
+\faIcon{globe-americas} - Talking to the world - One QSO at a time
+============================
+
+The amateur radio hobby provides a rich source of geospatial data points.  The hobby involves using your
+radio equipment to talk to other operators throughout the world via various modes of communication: voice,
+Morse Code, or numerous digital modes.  Each successful contact is called a QSO.  In the past, operators would
+exchange custom postcards with the date and signal quality of the chat.  Often operators would use a large map
+and pushpins to mark their successes.  Today, we mostly use electronic logs.
+
+I used my electronic contact log's data to generate the map below which shows the locations of operators that I 
+successfully spoke with using a voice mode.
+
+---
+```{r edu_plot,fig.align='center', fig.width=6.5, fig.height=2.7, fig.showtext=TRUE}
+
+data <- read_delim('data/contactLog.csv', delim = '\t') %>%
+  filter(mode %in%  c('SSB', 'FM', 'AM')) %>%
+  filter(lat > -60)
+
+grid_connections <- data %>%
+  mutate(Maiden4 = substr(maiden, 1, 4)) %>%
+  dplyr::group_by(Maiden4, mylat, mylon) %>%
+  dplyr::summarise(Mh4_lat = mean(lat),
+                   Mh4_lon = mean(lon)) %>%
+  dplyr::ungroup()
+
+
+
+world <- map_data("world")
+
+world %>% filter(`region` != "Antarctica") %>%     # Focus on the other parts
+  ggplot(aes(long, lat, group = group)) +
+  geom_polygon(fill="white", color = "#dcdcdc", size=0.05, alpha = 0.1) +
+  geom_curve(data = grid_connections, 
+             aes(x = mylon, 
+                 xend = Mh4_lon,
+                 y = mylat,  
+                 yend = Mh4_lat), 
+             alpha=0.1, 
+             size=0.5,
+             color = myColor,
+             inherit.aes = FALSE) +
+  theme_void() +
+  theme(plot.background=element_rect(fill="white",linetype = 0),
+        legend.position="none",
+        axis.text = element_blank(),
+        axis.line = element_blank(),
+        panel.grid = element_blank(),
+        # panel.border = element_rect(linetype = 0),
+        plot.caption = element_text(size = 6,
+                          hjust = 0.92, 
+                          margin = margin(t = 0.2,
+                                          b = 0,
+                                          unit = "cm"), 
+                                  color = "black"), 
+        title = element_text(size = 14, color = myColor, family =) ) +
+    ggtitle(label = "KC3DRU Contact Log",
+            subtitle = "Direct voice contacts using single sideband mode") +
+  labs(caption = "Data source: ADIF logbook with Maidenhead Grid Square coordinates transformed to Lat. / Lon. via Python.") +
+    xlab("") +
+  ylab("") +
+  coord_equal()
+
+```
+
+\bigskip
+\bigskip
+
+
+\faIcon{microscope} - About this CV
+============================
+
+This curriculum vitae was generated in RMarkdown using Mitchell O'Hara-Wild's library "Vitae" *(https://pkg.mitchelloharawild.com/vitae/)* and a couple LaTeX statements here and there to help with pagination.  Bryan Jenks has a great video showing how to get started with Mitchell's library  *(https://www.youtube.com/watch?v=cMlRAiQUdD8)*.  I pulled in the custom LaTeX class file from Lorena Abad's GitHub *(https://github.com/loreabad6/R-CV)*.
+
+My 'Twenty Second' brief resume is available in my GitHub repo  https://github.com/KC3DRU/CV/Resume20Seconds.pdf . 
+
