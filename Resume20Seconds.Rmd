@@ -207,7 +207,4 @@ Millersville University of PA
 Curriculum Vitae
 ============================
 
-My curriculum vitae is available at my GitHub repository https://github.com/KC3DRU/CV/CV.pdf 
-
-
-
+My curriculum vitae is available at my GitHub repository https://github.com/KC3DRU/CV/CV.pdf. 
