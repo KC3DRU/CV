@@ -58,10 +58,7 @@ y <- rmarkdown::metadata$skillstext
 
 print(paste("x=", x, "  y=", y))
 ```
-
-
 # Employment  
-
 ```{r EMPLOYMENT}
 
 # Pull in the theme color from the YAML parms and use it in plots and 
@@ -107,7 +104,7 @@ skillSummary <- data.frame(Topic=character(), myList=character())
 # Build each skill into a string with a semicolon separating each entry.
   aList = ''
   y = 0
-  yMax = length(skills)
+  yMax = nrow(skills)
   for (s in skills$Topic) {
     
     y = y + 1
@@ -200,7 +197,7 @@ service %>%
 
 1981 - 1985 Bachelor of Science in Business Administration
 
-Millersville University of PA
+Millersville University of Pennsylvania
 
 
 
